@@ -12,8 +12,15 @@ st.markdown("Sistema analítico interactivo alineado al **ODS 14: Vida Submarina
 # Carga de datos (Usamos caché para que no recargue el CSV pesando en cada clic)
 @st.cache_data
 def load_data():
-    # Asegúrate de tener tu archivo limpio aquí
-    df = pd.read_csv("purse_seines.csv.zip", compression="zip")
+    # 1. Abrimos el archivo ZIP
+    with zipfile.ZipFile("purse_seines.csv.zip", "r") as z:
+        # 2. Buscamos el archivo real, ignorando la basura de Mac (__MACOSX)
+        csv_filename = [name for name in z.namelist() if name.endswith('.csv') and not name.startswith('__MACOSX')][0]
+        
+        # 3. Leemos específicamente ese archivo
+        with z.open(csv_filename) as f:
+            df = pd.read_csv(f)
+            
     df = df.dropna(subset=['speed', 'course'])
     df = df[df['is_fishing'].isin([0, 1])]
     return df
