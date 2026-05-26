@@ -18,31 +18,38 @@ def load_data():
         with z.open(csv_filename) as f:
             df = pd.read_csv(f)
             
+    # Eliminar valores nulos en velocidad y rumbo
     df = df.dropna(subset=['speed', 'course'])
     
-    # FORZAR FORMATO NUMÉRICO (Evita el error de datos en blanco)
-    df['is_fishing'] = pd.to_numeric(df['is_fishing'], errors='coerce')
+    # 1. FORZAR A NÚMERO (si hay un error, lo vuelve NaN y luego lo convertimos a -1 para que no rompa el código)
+    df['is_fishing'] = pd.to_numeric(df['is_fishing'], errors='coerce').fillna(-1)
+    
+    # 2. FORZAR A ENTERO PURO (convierte 1.0 o "1" estrictamente en el entero 1)
+    df['is_fishing'] = df['is_fishing'].astype(int)
+    
+    # 3. Filtrar estrictamente solo los valores 0 y 1
     df = df[df['is_fishing'].isin([0, 1])]
     
-    # CREAR ETIQUETAS ELEGANTES PARA LAS GRÁFICAS
+    # 4. Crear etiquetas elegantes (ahora sí funcionará el mapeo exacto)
     df['Estado'] = df['is_fishing'].map({0: 'En Tránsito', 1: 'Pescando'})
     
     return df
 
 df = load_data()
 
-# PANEL LATERAL (Filtros)
+# ==========================================
+# PANEL LATERAL (Filtros actualizados)
+# ==========================================
 st.sidebar.header("Filtros de Análisis")
 estado_pesca = st.sidebar.selectbox("Estado de Actividad:", options=["Todos", "En Tránsito (0)", "Pescando (1)"])
 
-# Aplicar filtros
+# AHORA FILTRAMOS USANDO LA COLUMNA 'Estado' PARA EVITAR CONFLICTOS NUMÉRICOS
 if estado_pesca == "En Tránsito (0)":
-    df_filtered = df[df['is_fishing'] == 0]
+    df_filtered = df[df['Estado'] == 'En Tránsito']
 elif estado_pesca == "Pescando (1)":
-    df_filtered = df[df['is_fishing'] == 1]
+    df_filtered = df[df['Estado'] == 'Pescando']
 else:
     df_filtered = df
-
 # SECCIÓN DE MÉTRICAS (KPIs)
 col1, col2, col3 = st.columns(3)
 col1.metric("Registros Analizados", f"{len(df_filtered):,}")
