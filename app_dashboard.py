@@ -57,10 +57,10 @@ st.subheader("🗺️ Mapeo Geoespacial de Trayectorias")
 fig_map = px.scatter_mapbox(df_filtered, 
                             lat="lat", 
                             lon="lon", 
-                            color="is_fishing",
+                            color="Estado", # <-- Cambiado aquí
                             hover_name="mmsi",
                             hover_data=["speed", "course", "distance_from_shore"],
-                            color_continuous_scale=px.colors.diverging.RdYlGn[::-1],
+                            color_discrete_map={"En Tránsito": "blue", "Pescando": "red"}, # <-- Colores directos
                             zoom=4, 
                             height=500)
 fig_map.update_layout(mapbox_style="carto-positron")
@@ -71,13 +71,15 @@ col_chart1, col_chart2 = st.columns(2)
 
 with col_chart1:
     st.subheader("Distribución de Velocidades")
-    fig_hist = px.histogram(df_filtered, x="speed", color="is_fishing", nbins=50, 
+    fig_hist = px.histogram(df_filtered, x="speed", color="Estado", nbins=50, 
                             title="Frecuencia de velocidades operativas",
+                            color_discrete_map={"En Tránsito": "blue", "Pescando": "red"},
                             barmode="overlay")
     st.plotly_chart(fig_hist, use_container_width=True)
 
 with col_chart2:
     st.subheader("Relación Distancia a Costa vs Velocidad")
-    fig_scatter = px.scatter(df_filtered, x="distance_from_shore", y="speed", color="is_fishing",
+    fig_scatter = px.scatter(df_filtered, x="distance_from_shore", y="speed", color="Estado",
+                             color_discrete_map={"En Tránsito": "blue", "Pescando": "red"},
                              title="Análisis de fronteras oceánicas")
     st.plotly_chart(fig_scatter, use_container_width=True)
